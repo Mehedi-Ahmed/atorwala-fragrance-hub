@@ -3,28 +3,26 @@ import ehsasImage from "@/assets/ehsas-al-arabia.jpg";
 import royalMintImage from "@/assets/royal-mint.jpg";
 import diorSauvageImage from "@/assets/dior-sauvage.jpg";
 
-const ProductsSection = () => {
+interface ProductsSectionProps {
+  onProductOrder: (productName: string) => void;
+}
+
+const ProductsSection = ({ onProductOrder }: ProductsSectionProps) => {
   const products = [
     {
-      id: "ehsas-al-arabia",
       name: "Ehsas Al Arabia",
       image: ehsasImage,
-      description: "A captivating blend of traditional Arabian notes with modern sophistication. This exquisite attar embodies the essence of Middle Eastern luxury.",
-      price: 250
+      description: "A captivating blend of traditional Arabian notes with modern sophistication. This exquisite attar embodies the essence of Middle Eastern luxury."
     },
     {
-      id: "royal-mint",
       name: "Royal Mint",
       image: royalMintImage,
-      description: "Fresh and invigorating, this premium attar combines the coolness of mint with royal elegance. Perfect for those who appreciate refined freshness.",
-      price: 250
+      description: "Fresh and invigorating, this premium attar combines the coolness of mint with royal elegance. Perfect for those who appreciate refined freshness."
     },
     {
-      id: "dior-sauvage",
       name: "Dior Sauvage",
       image: diorSauvageImage,
-      description: "A bold and wild fragrance that captures the spirit of wide-open spaces. This interpretation brings luxury and intensity in every drop.",
-      price: 250
+      description: "A bold and wild fragrance that captures the spirit of wide-open spaces. This interpretation brings luxury and intensity in every drop."
     }
   ];
 
@@ -44,12 +42,11 @@ const ProductsSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {products.map((product) => (
             <ProductCard
-              key={product.id}
-              id={product.id}
+              key={product.name}
               name={product.name}
               image={product.image}
               description={product.description}
-              price={product.price}
+              onOrder={onProductOrder}
             />
           ))}
         </div>

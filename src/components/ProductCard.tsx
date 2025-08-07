@@ -1,29 +1,16 @@
 import { useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/contexts/CartContext";
-import { useToast } from "@/hooks/use-toast";
 
 interface ProductCardProps {
-  id: string;
   name: string;
   image: string;
   description: string;
-  price: number;
+  onOrder: (productName: string) => void;
 }
 
-const ProductCard = ({ id, name, image, description, price }: ProductCardProps) => {
+const ProductCard = ({ name, image, description, onOrder }: ProductCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
-  const { addToCart } = useCart();
-  const { toast } = useToast();
-
-  const handleAddToCart = () => {
-    addToCart({ id, name, image, price }, 1);
-    toast({
-      title: "Added to Cart!",
-      description: `${name} has been added to your cart.`,
-    });
-  };
 
   return (
     <Card 
@@ -52,7 +39,7 @@ const ProductCard = ({ id, name, image, description, price }: ProductCardProps) 
         </p>
         <div className="flex items-center justify-between text-sm text-luxury-navy/70">
           <span className="font-semibold">6ml Premium Bottle</span>
-          <span className="text-luxury-gold font-bold text-lg">৳{price}</span>
+          <span className="text-luxury-gold font-bold">COD Available</span>
         </div>
       </CardContent>
       
@@ -60,9 +47,9 @@ const ProductCard = ({ id, name, image, description, price }: ProductCardProps) 
         <Button 
           variant="luxury" 
           className="w-full h-12 text-base font-semibold"
-          onClick={handleAddToCart}
+          onClick={() => onOrder(name)}
         >
-          Add to Cart
+          Order Now
         </Button>
       </CardFooter>
     </Card>
