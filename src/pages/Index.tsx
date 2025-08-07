@@ -3,32 +3,37 @@ import HeroSection from "@/components/HeroSection";
 import ProductsSection from "@/components/ProductsSection";
 import OrderForm from "@/components/OrderForm";
 import Footer from "@/components/Footer";
+import CartIcon from "@/components/CartIcon";
+import CartDrawer from "@/components/CartDrawer";
+import { CartProvider } from "@/contexts/CartContext";
 
 const Index = () => {
   const [isOrderFormOpen, setIsOrderFormOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState("");
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
-  const handleProductOrder = (productName: string) => {
-    setSelectedProduct(productName);
+  const handleCheckout = () => {
+    setIsCartOpen(false);
     setIsOrderFormOpen(true);
   };
 
-  const handleCloseOrderForm = () => {
-    setIsOrderFormOpen(false);
-    setSelectedProduct("");
-  };
-
   return (
-    <div className="min-h-screen">
-      <HeroSection />
-      <ProductsSection onProductOrder={handleProductOrder} />
-      <Footer />
-      <OrderForm 
-        isOpen={isOrderFormOpen}
-        onClose={handleCloseOrderForm}
-        selectedProduct={selectedProduct}
-      />
-    </div>
+    <CartProvider>
+      <div className="min-h-screen">
+        <HeroSection />
+        <ProductsSection />
+        <Footer />
+        <CartIcon onClick={() => setIsCartOpen(true)} />
+        <CartDrawer 
+          isOpen={isCartOpen}
+          onClose={() => setIsCartOpen(false)}
+          onCheckout={handleCheckout}
+        />
+        <OrderForm 
+          isOpen={isOrderFormOpen}
+          onClose={() => setIsOrderFormOpen(false)}
+        />
+      </div>
+    </CartProvider>
   );
 };
 

@@ -6,14 +6,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { X } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
 
 interface OrderFormProps {
   isOpen: boolean;
   onClose: () => void;
-  selectedProduct: string;
 }
 
-const OrderForm = ({ isOpen, onClose, selectedProduct }: OrderFormProps) => {
+const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -21,14 +21,17 @@ const OrderForm = ({ isOpen, onClose, selectedProduct }: OrderFormProps) => {
     notes: ""
   });
   const { toast } = useToast();
+  const { items, getTotalPrice, clearCart } = useCart();
+
+  const totalPrice = getTotalPrice();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.phone || !formData.address) {
+    if (!formData.name || !formData.phone || !formData.address || items.length === 0) {
       toast({
         title: "Missing Information",
-        description: "Please fill in all required fields.",
+        description: "Please fill in all required fields and ensure your cart is not empty.",
         variant: "destructive",
       });
       return;
@@ -37,11 +40,12 @@ const OrderForm = ({ isOpen, onClose, selectedProduct }: OrderFormProps) => {
     // Here you would typically send the order to your backend
     toast({
       title: "Order Received!",
-      description: `Your order for ${selectedProduct} has been received. We'll contact you shortly to confirm delivery details.`,
+      description: `Your order for ${items.length} item(s) totaling ৳${totalPrice} has been received. We'll contact you shortly!`,
     });
 
-    // Reset form and close
+    // Reset form, clear cart and close
     setFormData({ name: "", phone: "", address: "", notes: "" });
+    clearCart();
     onClose();
   };
 
@@ -52,14 +56,14 @@ const OrderForm = ({ isOpen, onClose, selectedProduct }: OrderFormProps) => {
     }));
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || items.length === 0) return null;
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <Card variant="luxury" className="w-full max-w-md max-h-[90vh] overflow-y-auto">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle className="text-2xl font-bold text-luxury-navy">
-            Order {selectedProduct}
+            Complete Your Order
           </CardTitle>
           <Button 
             variant="ghost" 
@@ -132,11 +136,29 @@ const OrderForm = ({ isOpen, onClose, selectedProduct }: OrderFormProps) => {
               />
             </div>
 
-            <div className="bg-luxury-cream/50 p-4 rounded-lg border border-luxury-gold/20">
-              <h4 className="font-semibold text-luxury-navy mb-2">Order Summary</h4>
-              <p className="text-sm text-luxury-navy/80 mb-1">Product: {selectedProduct}</p>
-              <p className="text-sm text-luxury-navy/80 mb-1">Size: 6ml Premium Bottle</p>
-              <p className="text-sm font-semibold text-luxury-gold">Payment: Cash on Delivery (COD)</p>
+            <div className="bg-luxury-cream/50 p-6 rounded-lg border border-luxury-gold/20">
+              <h4 className="font-bold text-luxury-navy mb-4 text-lg">Order Summary</h4>
+              <div className="space-y-3 max-h-48 overflow-y-auto">
+                {items.map((item) => (
+                  <div key={item.id} className="flex justify-between items-center py-2 border-b border-luxury-gold/10">
+                    <div>
+                      <span className="font-semibold text-luxury-navy">{item.name}</span>
+                      <span className="text-sm text-luxury-navy/70 ml-2">x{item.quantity}</span>
+                    </div>
+                    <span className="text-luxury-navy">৳{item.price * item.quantity}</span>
+                  </div>
+                ))}
+              </div>
+              <hr className="border-luxury-gold/30 my-4" />
+              <div className="flex justify-between items-center text-lg">
+                <span className="font-bold text-luxury-navy">Total Amount:</span>
+                <span className="font-bold text-luxury-gold">৳{totalPrice}</span>
+              </div>
+              <div className="text-center pt-2">
+                <span className="text-sm font-semibold text-luxury-gold bg-luxury-gold/10 px-3 py-1 rounded-full">
+                  Cash on Delivery (COD)
+                </span>
+              </div>
             </div>
 
             <Button 
