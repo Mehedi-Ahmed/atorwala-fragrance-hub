@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { X } from "lucide-react";
+import { X, Plus, Minus } from "lucide-react";
 
 interface OrderFormProps {
   isOpen: boolean;
@@ -18,14 +18,18 @@ const OrderForm = ({ isOpen, onClose, selectedProduct }: OrderFormProps) => {
     name: "",
     phone: "",
     address: "",
-    notes: ""
+    notes: "",
+    quantity: 1
   });
   const { toast } = useToast();
+
+  const unitPrice = 250;
+  const totalPrice = formData.quantity * unitPrice;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.phone || !formData.address) {
+    if (!formData.name || !formData.phone || !formData.address || formData.quantity < 1) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields.",
@@ -37,15 +41,19 @@ const OrderForm = ({ isOpen, onClose, selectedProduct }: OrderFormProps) => {
     // Here you would typically send the order to your backend
     toast({
       title: "Order Received!",
-      description: `Your order for ${selectedProduct} has been received. We'll contact you shortly to confirm delivery details.`,
+      description: `Your order for ${formData.quantity}x ${selectedProduct} (৳${totalPrice}) has been received. We'll contact you shortly!`,
     });
 
     // Reset form and close
-    setFormData({ name: "", phone: "", address: "", notes: "" });
+    setFormData({ name: "", phone: "", address: "", notes: "", quantity: 1 });
     onClose();
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const updateQuantity = (change: number) => {
+    const newQuantity = Math.max(1, formData.quantity + change);
+    setFormData(prev => ({ ...prev, quantity: newQuantity }));
+  };
+  const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -132,11 +140,73 @@ const OrderForm = ({ isOpen, onClose, selectedProduct }: OrderFormProps) => {
               />
             </div>
 
-            <div className="bg-luxury-cream/50 p-4 rounded-lg border border-luxury-gold/20">
-              <h4 className="font-semibold text-luxury-navy mb-2">Order Summary</h4>
-              <p className="text-sm text-luxury-navy/80 mb-1">Product: {selectedProduct}</p>
-              <p className="text-sm text-luxury-navy/80 mb-1">Size: 6ml Premium Bottle</p>
-              <p className="text-sm font-semibold text-luxury-gold">Payment: Cash on Delivery (COD)</p>
+            <div className="space-y-2">
+              <Label htmlFor="quantity" className="text-luxury-navy font-semibold">
+                Quantity
+              </Label>
+              <div className="flex items-center space-x-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => updateQuantity(-1)}
+                  disabled={formData.quantity <= 1}
+                  className="h-10 w-10 border-luxury-gold/30 hover:border-luxury-gold hover:bg-luxury-gold/10"
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <div className="flex-1 text-center">
+                  <Input
+                    id="quantity"
+                    type="number"
+                    min="1"
+                    value={formData.quantity}
+                    onChange={(e) => handleInputChange("quantity", Math.max(1, parseInt(e.target.value) || 1))}
+                    className="text-center border-luxury-gold/30 focus:border-luxury-gold font-semibold"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => updateQuantity(1)}
+                  className="h-10 w-10 border-luxury-gold/30 hover:border-luxury-gold hover:bg-luxury-gold/10"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="bg-luxury-cream/50 p-6 rounded-lg border border-luxury-gold/20">
+              <h4 className="font-bold text-luxury-navy mb-4 text-lg">Order Summary</h4>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-luxury-navy/80">Product:</span>
+                  <span className="font-semibold text-luxury-navy">{selectedProduct}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-luxury-navy/80">Size:</span>
+                  <span className="text-luxury-navy">6ml Premium Bottle</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-luxury-navy/80">Unit Price:</span>
+                  <span className="text-luxury-navy">৳{unitPrice}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-luxury-navy/80">Quantity:</span>
+                  <span className="text-luxury-navy font-semibold">{formData.quantity}</span>
+                </div>
+                <hr className="border-luxury-gold/30" />
+                <div className="flex justify-between items-center text-lg">
+                  <span className="font-bold text-luxury-navy">Total Amount:</span>
+                  <span className="font-bold text-luxury-gold">৳{totalPrice}</span>
+                </div>
+                <div className="text-center pt-2">
+                  <span className="text-sm font-semibold text-luxury-gold bg-luxury-gold/10 px-3 py-1 rounded-full">
+                    Cash on Delivery (COD)
+                  </span>
+                </div>
+              </div>
             </div>
 
             <Button 
