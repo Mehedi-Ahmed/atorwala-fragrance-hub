@@ -18,11 +18,12 @@ const HeroSection = () => {
       
       {/* Content */}
       <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
+        {/* <center><img src=></center>*/}
         <h1 className="text-6xl md:text-8xl font-bold text-luxury-gold mb-6 tracking-wide">
-          Atorwala
+        Atorwala
         </h1>
         <p className="text-xl md:text-2xl text-luxury-cream mb-8 leading-relaxed">
-          Exquisite Premium Attars
+          Crafting Scents, Creating Memories
         </p>
         <p className="text-lg text-luxury-cream/80 mb-12 max-w-2xl mx-auto">
           Experience the finest collection of traditional fragrances, 
