@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,13 +20,59 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
     name: "",
     phone: "",
     address: "",
-    notes: ""
+    notes: "",
+    promoCode: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [isValidatingPromo, setIsValidatingPromo] = useState(false);
   const { toast } = useToast();
   const { items, getTotalPrice, clearCart } = useCart();
 
   const totalPrice = getTotalPrice();
+  const discountAmount = (totalPrice * promoDiscount) / 100;
+  const finalPrice = totalPrice - discountAmount;
+
+  const validatePromoCode = async (code: string) => {
+    if (!code.trim()) {
+      setPromoDiscount(0);
+      return;
+    }
+
+    setIsValidatingPromo(true);
+    try {
+      const { data, error } = await supabase.rpc('validate_promo_code', { code: code.trim() });
+      
+      if (error) {
+        console.error('Error validating promo code:', error);
+        setPromoDiscount(0);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        const result = data[0];
+        if (result.is_valid) {
+          setPromoDiscount(result.discount_percent);
+          toast({
+            title: "Promo Code Applied!",
+            description: `${result.discount_percent}% discount applied to your order.`,
+          });
+        } else {
+          setPromoDiscount(0);
+          toast({
+            title: "Invalid Promo Code",
+            description: "The promo code you entered is not valid.",
+            variant: "destructive",
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Promo code validation error:', error);
+      setPromoDiscount(0);
+    } finally {
+      setIsValidatingPromo(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,53 +89,60 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
     setIsSubmitting(true);
 
     try {
-      // Insert the order
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
+      // Generate order number
+      const { data: orderNumberData, error: orderNumberError } = await supabase.rpc('generate_order_number');
+      
+      if (orderNumberError) {
+        console.error('Error generating order number:', orderNumberError);
+        throw orderNumberError;
+      }
+
+      const orderNumber = orderNumberData;
+
+      // Insert each cart item as a separate order record
+      const orderRecords = items.map(item => {
+        const subtotal = item.price * item.quantity;
+        const itemDiscountAmount = (subtotal * promoDiscount) / 100;
+        const itemFinalAmount = subtotal - itemDiscountAmount;
+
+        return {
+          order_number: orderNumber,
           customer_name: formData.name,
           customer_phone: formData.phone,
           delivery_address: formData.address,
           special_notes: formData.notes || null,
-          total_amount: totalPrice,
+          product_id: item.id,
+          product_name: item.name,
+          product_image: item.image,
+          quantity: item.quantity,
+          unit_price: item.price,
+          subtotal: subtotal,
+          promo_code: formData.promoCode || null,
+          discount_percentage: promoDiscount,
+          discount_amount: itemDiscountAmount,
+          final_amount: itemFinalAmount,
           status: 'pending'
-        })
-        .select()
-        .single();
+        };
+      });
 
-      if (orderError) {
-        console.error('Error creating order:', orderError);
-        throw orderError;
-      }
+      const { error: insertError } = await supabase
+        .from('orders')
+        .insert(orderRecords);
 
-      // Insert order items
-      const orderItems = items.map(item => ({
-        order_id: order.id,
-        product_id: item.id,
-        product_name: item.name,
-        product_image: item.image,
-        quantity: item.quantity,
-        unit_price: item.price,
-        total_price: item.price * item.quantity
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-
-      if (itemsError) {
-        console.error('Error creating order items:', itemsError);
-        throw itemsError;
+      if (insertError) {
+        console.error('Error creating order:', insertError);
+        throw insertError;
       }
 
       // Success!
       toast({
         title: "Order Placed Successfully!",
-        description: `Your order for ${items.length} item(s) totaling ৳${totalPrice} has been received. We'll contact you shortly!`,
+        description: `Order ${orderNumber} for ${items.length} item(s) totaling ৳${finalPrice.toFixed(2)} has been received. We'll contact you shortly!`,
       });
 
       // Reset form, clear cart and close
-      setFormData({ name: "", phone: "", address: "", notes: "" });
+      setFormData({ name: "", phone: "", address: "", notes: "", promoCode: "" });
+      setPromoDiscount(0);
       clearCart();
       onClose();
 
@@ -109,6 +163,16 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
       ...prev,
       [field]: value
     }));
+  };
+
+  const handlePromoCodeChange = (value: string) => {
+    handleInputChange("promoCode", value);
+    if (value.trim()) {
+      const timeoutId = setTimeout(() => validatePromoCode(value), 500);
+      return () => clearTimeout(timeoutId);
+    } else {
+      setPromoDiscount(0);
+    }
   };
 
   if (!isOpen || items.length === 0) return null;
@@ -182,6 +246,29 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="promoCode" className="text-luxury-navy font-semibold">
+                Promo Code (Optional)
+              </Label>
+              <Input
+                id="promoCode"
+                type="text"
+                value={formData.promoCode}
+                onChange={(e) => handlePromoCodeChange(e.target.value)}
+                placeholder="Enter promo code (e.g., AW10)"
+                disabled={isSubmitting || isValidatingPromo}
+                className="border-luxury-gold/30 focus:border-luxury-gold"
+              />
+              {isValidatingPromo && (
+                <p className="text-sm text-luxury-navy/70">Validating promo code...</p>
+              )}
+              {promoDiscount > 0 && (
+                <p className="text-sm text-green-600 font-semibold">
+                  {promoDiscount}% discount applied!
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="notes" className="text-luxury-navy font-semibold">
                 Special Notes (Optional)
               </Label>
@@ -210,9 +297,21 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
                 ))}
               </div>
               <hr className="border-luxury-gold/30 my-4" />
-              <div className="flex justify-between items-center text-lg">
-                <span className="font-bold text-luxury-navy">Total Amount:</span>
-                <span className="font-bold text-luxury-gold">৳{totalPrice}</span>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-luxury-navy">Subtotal:</span>
+                  <span className="text-luxury-navy">৳{totalPrice.toFixed(2)}</span>
+                </div>
+                {promoDiscount > 0 && (
+                  <div className="flex justify-between items-center text-green-600">
+                    <span>Discount ({promoDiscount}%):</span>
+                    <span>-৳{discountAmount.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center text-lg">
+                  <span className="font-bold text-luxury-navy">Total Amount:</span>
+                  <span className="font-bold text-luxury-gold">৳{finalPrice.toFixed(2)}</span>
+                </div>
               </div>
               <div className="text-center pt-2">
                 <span className="text-sm font-semibold text-luxury-gold bg-luxury-gold/10 px-3 py-1 rounded-full">

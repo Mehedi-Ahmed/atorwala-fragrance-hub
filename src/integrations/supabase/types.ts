@@ -14,60 +14,26 @@ export type Database = {
   }
   public: {
     Tables: {
-      order_items: {
-        Row: {
-          created_at: string
-          id: string
-          order_id: string
-          product_id: string
-          product_image: string
-          product_name: string
-          quantity: number
-          total_price: number
-          unit_price: number
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          order_id: string
-          product_id: string
-          product_image: string
-          product_name: string
-          quantity?: number
-          total_price: number
-          unit_price: number
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          order_id?: string
-          product_id?: string
-          product_image?: string
-          product_name?: string
-          quantity?: number
-          total_price?: number
-          unit_price?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "order_items_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       orders: {
         Row: {
           created_at: string
           customer_name: string
           customer_phone: string
           delivery_address: string
+          discount_amount: number | null
+          discount_percentage: number | null
+          final_amount: number
           id: string
+          order_number: string
+          product_id: string
+          product_image: string
+          product_name: string
+          promo_code: string | null
+          quantity: number
           special_notes: string | null
           status: string
-          total_amount: number
+          subtotal: number
+          unit_price: number
           updated_at: string
         }
         Insert: {
@@ -75,10 +41,20 @@ export type Database = {
           customer_name: string
           customer_phone: string
           delivery_address: string
+          discount_amount?: number | null
+          discount_percentage?: number | null
+          final_amount: number
           id?: string
+          order_number: string
+          product_id: string
+          product_image: string
+          product_name: string
+          promo_code?: string | null
+          quantity?: number
           special_notes?: string | null
           status?: string
-          total_amount: number
+          subtotal: number
+          unit_price: number
           updated_at?: string
         }
         Update: {
@@ -86,10 +62,20 @@ export type Database = {
           customer_name?: string
           customer_phone?: string
           delivery_address?: string
+          discount_amount?: number | null
+          discount_percentage?: number | null
+          final_amount?: number
           id?: string
+          order_number?: string
+          product_id?: string
+          product_image?: string
+          product_name?: string
+          promo_code?: string | null
+          quantity?: number
           special_notes?: string | null
           status?: string
-          total_amount?: number
+          subtotal?: number
+          unit_price?: number
           updated_at?: string
         }
         Relationships: []
@@ -99,7 +85,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_order_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      validate_promo_code: {
+        Args: { code: string }
+        Returns: {
+          is_valid: boolean
+          discount_percent: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
