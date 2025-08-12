@@ -18,6 +18,9 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+			        sans: ['Jura', 'ui-sans-serif', 'system-ui'], // 👈 Added here
+			      },
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
