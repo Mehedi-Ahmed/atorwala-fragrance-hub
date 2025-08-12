@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { X } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface OrderFormProps {
   isOpen: boolean;
@@ -20,12 +21,13 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
     address: "",
     notes: ""
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { items, getTotalPrice, clearCart } = useCart();
 
   const totalPrice = getTotalPrice();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.name || !formData.phone || !formData.address || items.length === 0) {
@@ -37,16 +39,69 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
       return;
     }
 
-    // Here you would typically send the order to your backend
-    toast({
-      title: "Order Received!",
-      description: `Your order for ${items.length} item(s) totaling ৳${totalPrice} has been received. We'll contact you shortly!`,
-    });
+    setIsSubmitting(true);
 
-    // Reset form, clear cart and close
-    setFormData({ name: "", phone: "", address: "", notes: "" });
-    clearCart();
-    onClose();
+    try {
+      // Insert the order
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          customer_name: formData.name,
+          customer_phone: formData.phone,
+          delivery_address: formData.address,
+          special_notes: formData.notes || null,
+          total_amount: totalPrice,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (orderError) {
+        console.error('Error creating order:', orderError);
+        throw orderError;
+      }
+
+      // Insert order items
+      const orderItems = items.map(item => ({
+        order_id: order.id,
+        product_id: item.id,
+        product_name: item.name,
+        product_image: item.image,
+        quantity: item.quantity,
+        unit_price: item.price,
+        total_price: item.price * item.quantity
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) {
+        console.error('Error creating order items:', itemsError);
+        throw itemsError;
+      }
+
+      // Success!
+      toast({
+        title: "Order Placed Successfully!",
+        description: `Your order for ${items.length} item(s) totaling ৳${totalPrice} has been received. We'll contact you shortly!`,
+      });
+
+      // Reset form, clear cart and close
+      setFormData({ name: "", phone: "", address: "", notes: "" });
+      clearCart();
+      onClose();
+
+    } catch (error) {
+      console.error('Order submission error:', error);
+      toast({
+        title: "Order Failed",
+        description: "There was an error placing your order. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -70,6 +125,7 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
             size="icon" 
             onClick={onClose}
             className="h-8 w-8 text-luxury-navy hover:bg-luxury-gold/10"
+            disabled={isSubmitting}
           >
             <X className="h-4 w-4" />
           </Button>
@@ -88,6 +144,7 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
                 onChange={(e) => handleInputChange("name", e.target.value)}
                 placeholder="Enter your full name"
                 required
+                disabled={isSubmitting}
                 className="border-luxury-gold/30 focus:border-luxury-gold"
               />
             </div>
@@ -103,6 +160,7 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
                 onChange={(e) => handleInputChange("phone", e.target.value)}
                 placeholder="Enter your phone number"
                 required
+                disabled={isSubmitting}
                 className="border-luxury-gold/30 focus:border-luxury-gold"
               />
             </div>
@@ -117,6 +175,7 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
                 onChange={(e) => handleInputChange("address", e.target.value)}
                 placeholder="Enter your complete delivery address"
                 required
+                disabled={isSubmitting}
                 rows={3}
                 className="border-luxury-gold/30 focus:border-luxury-gold resize-none"
               />
@@ -132,6 +191,7 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
                 onChange={(e) => handleInputChange("notes", e.target.value)}
                 placeholder="Any special delivery instructions or notes"
                 rows={2}
+                disabled={isSubmitting}
                 className="border-luxury-gold/30 focus:border-luxury-gold resize-none"
               />
             </div>
@@ -165,8 +225,9 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
               type="submit" 
               variant="gold" 
               className="w-full h-12 text-base font-semibold"
+              disabled={isSubmitting}
             >
-              Place Order
+              {isSubmitting ? "Placing Order..." : "Place Order"}
             </Button>
           </form>
         </CardContent>
