@@ -28,7 +28,7 @@ const Footer = () => {
           
           <div className="border-t border-luxury-gold/20 pt-6 mt-8">
             <p className="text-luxury-cream/60 text-sm">
-              © 2024 Atorwala. All rights reserved.
+              © 2025 Atorwala. All rights reserved.
             </p>
           </div>
         </div>
