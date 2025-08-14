@@ -125,9 +125,10 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
 
       console.log('Submitting order:', orderRecord);
 
+      // Use type assertion to bypass outdated TypeScript definitions
       const { error: insertError } = await supabase
         .from('orders')
-        .insert(orderRecord); // Remove array wrapper since we're inserting a single record
+        .insert(orderRecord as any);
 
       if (insertError) {
         console.error('Error creating order:', insertError);
