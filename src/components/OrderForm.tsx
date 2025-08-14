@@ -99,35 +99,36 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
 
       const orderNumber = orderNumberData;
 
-      // Insert each cart item as a separate order record
-      const orderRecords = items.map(item => {
-        const subtotal = item.price * item.quantity;
-        const itemDiscountAmount = (subtotal * promoDiscount) / 100;
-        const itemFinalAmount = subtotal - itemDiscountAmount;
+      // Prepare items for JSON storage
+      const orderItems = items.map(item => ({
+        id: item.id,
+        name: item.name,
+        image: item.image,
+        quantity: item.quantity,
+        price: item.price
+      }));
 
-        return {
-          order_number: orderNumber,
-          customer_name: formData.name,
-          customer_phone: formData.phone,
-          delivery_address: formData.address,
-          special_notes: formData.notes || null,
-          product_id: item.id,
-          product_name: item.name,
-          product_image: item.image,
-          quantity: item.quantity,
-          unit_price: item.price,
-          subtotal: subtotal,
-          promo_code: formData.promoCode || null,
-          discount_percentage: promoDiscount,
-          discount_amount: itemDiscountAmount,
-          final_amount: itemFinalAmount,
-          status: 'pending'
-        };
-      });
+      // Create single order record with all information
+      const orderRecord = {
+        order_number: orderNumber,
+        customer_name: formData.name,
+        customer_phone: formData.phone,
+        delivery_address: formData.address,
+        special_notes: formData.notes || null,
+        items: orderItems, // JSON array of all items
+        subtotal: totalPrice,
+        promo_code: formData.promoCode || null,
+        discount_percentage: promoDiscount,
+        discount_amount: discountAmount,
+        total_amount: finalPrice,
+        status: 'pending'
+      };
+
+      console.log('Submitting order:', orderRecord);
 
       const { error: insertError } = await supabase
         .from('orders')
-        .insert(orderRecords);
+        .insert([orderRecord]);
 
       if (insertError) {
         console.error('Error creating order:', insertError);
