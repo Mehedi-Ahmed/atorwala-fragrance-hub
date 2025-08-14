@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -108,7 +107,7 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
         price: item.price
       }));
 
-      // Create single order record with all information
+      // Create single order record with all information using correct field names
       const orderRecord = {
         order_number: orderNumber,
         customer_name: formData.name,
@@ -120,7 +119,7 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
         promo_code: formData.promoCode || null,
         discount_percentage: promoDiscount,
         discount_amount: discountAmount,
-        total_amount: finalPrice,
+        total_amount: finalPrice, // Use total_amount as per new schema
         status: 'pending'
       };
 
@@ -128,7 +127,7 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
 
       const { error: insertError } = await supabase
         .from('orders')
-        .insert([orderRecord]);
+        .insert(orderRecord); // Remove array wrapper since we're inserting a single record
 
       if (insertError) {
         console.error('Error creating order:', insertError);
