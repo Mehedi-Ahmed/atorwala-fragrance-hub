@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [isValidatingPromo, setIsValidatingPromo] = useState(false);
+  const [promoApplied, setPromoApplied] = useState(false);
   const { toast } = useToast();
   const { items, getTotalPrice, clearCart } = useCart();
 
@@ -35,6 +37,7 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
   const validatePromoCode = async (code: string) => {
     if (!code.trim()) {
       setPromoDiscount(0);
+      setPromoApplied(false);
       return;
     }
 
@@ -45,6 +48,7 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
       if (error) {
         console.error('Error validating promo code:', error);
         setPromoDiscount(0);
+        setPromoApplied(false);
         return;
       }
 
@@ -52,12 +56,14 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
         const result = data[0];
         if (result.is_valid) {
           setPromoDiscount(result.discount_percent);
+          setPromoApplied(true);
           toast({
             title: "Promo Code Applied!",
             description: `${result.discount_percent}% discount applied to your order.`,
           });
         } else {
           setPromoDiscount(0);
+          setPromoApplied(false);
           toast({
             title: "Invalid Promo Code",
             description: "The promo code you entered is not valid.",
@@ -68,9 +74,14 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
     } catch (error) {
       console.error('Promo code validation error:', error);
       setPromoDiscount(0);
+      setPromoApplied(false);
     } finally {
       setIsValidatingPromo(false);
     }
+  };
+
+  const handleApplyPromo = () => {
+    validatePromoCode(formData.promoCode);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -114,18 +125,17 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
         customer_phone: formData.phone,
         delivery_address: formData.address,
         special_notes: formData.notes || null,
-        items: orderItems, // JSON array of all items
+        items: orderItems,
         subtotal: totalPrice,
         promo_code: formData.promoCode || null,
         discount_percentage: promoDiscount,
         discount_amount: discountAmount,
-        total_amount: finalPrice, // Use total_amount as per new schema
+        total_amount: finalPrice,
         status: 'pending'
       };
 
       console.log('Submitting order:', orderRecord);
 
-      // Use type assertion to bypass outdated TypeScript definitions
       const { error: insertError } = await supabase
         .from('orders')
         .insert(orderRecord as any);
@@ -144,6 +154,7 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
       // Reset form, clear cart and close
       setFormData({ name: "", phone: "", address: "", notes: "", promoCode: "" });
       setPromoDiscount(0);
+      setPromoApplied(false);
       clearCart();
       onClose();
 
@@ -164,15 +175,11 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
       ...prev,
       [field]: value
     }));
-  };
-
-  const handlePromoCodeChange = (value: string) => {
-    handleInputChange("promoCode", value);
-    if (value.trim()) {
-      const timeoutId = setTimeout(() => validatePromoCode(value), 500);
-      return () => clearTimeout(timeoutId);
-    } else {
+    
+    // Reset promo code application when the code changes
+    if (field === "promoCode" && promoApplied) {
       setPromoDiscount(0);
+      setPromoApplied(false);
     }
   };
 
@@ -250,19 +257,30 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
               <Label htmlFor="promoCode" className="text-luxury-navy font-semibold">
                 Promo Code (Optional)
               </Label>
-              <Input
-                id="promoCode"
-                type="text"
-                value={formData.promoCode}
-                onChange={(e) => handlePromoCodeChange(e.target.value)}
-                placeholder="Enter promo code (e.g., AW10)"
-                disabled={isSubmitting || isValidatingPromo}
-                className="border-luxury-gold/30 focus:border-luxury-gold"
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="promoCode"
+                  type="text"
+                  value={formData.promoCode}
+                  onChange={(e) => handleInputChange("promoCode", e.target.value)}
+                  placeholder="Enter promo code (e.g., AW10)"
+                  disabled={isSubmitting || isValidatingPromo}
+                  className="border-luxury-gold/30 focus:border-luxury-gold flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleApplyPromo}
+                  disabled={isSubmitting || isValidatingPromo || !formData.promoCode.trim() || promoApplied}
+                  className="border-luxury-gold/30 text-luxury-navy hover:bg-luxury-gold/10"
+                >
+                  {isValidatingPromo ? "..." : promoApplied ? "Applied" : "Apply"}
+                </Button>
+              </div>
               {isValidatingPromo && (
                 <p className="text-sm text-luxury-navy/70">Validating promo code...</p>
               )}
-              {promoDiscount > 0 && (
+              {promoDiscount > 0 && promoApplied && (
                 <p className="text-sm text-green-600 font-semibold">
                   {promoDiscount}% discount applied!
                 </p>
@@ -303,7 +321,7 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
                   <span className="text-luxury-navy">Subtotal:</span>
                   <span className="text-luxury-navy">৳{totalPrice.toFixed(2)}</span>
                 </div>
-                {promoDiscount > 0 && (
+                {promoDiscount > 0 && promoApplied && (
                   <div className="flex justify-between items-center text-green-600">
                     <span>Discount ({promoDiscount}%):</span>
                     <span>-৳{discountAmount.toFixed(2)}</span>

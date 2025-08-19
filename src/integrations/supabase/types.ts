@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
@@ -22,18 +22,14 @@ export type Database = {
           delivery_address: string
           discount_amount: number | null
           discount_percentage: number | null
-          final_amount: number
           id: string
+          items: Json
           order_number: string
-          product_id: string
-          product_image: string
-          product_name: string
           promo_code: string | null
-          quantity: number
           special_notes: string | null
           status: string
           subtotal: number
-          unit_price: number
+          total_amount: number
           updated_at: string
         }
         Insert: {
@@ -43,18 +39,14 @@ export type Database = {
           delivery_address: string
           discount_amount?: number | null
           discount_percentage?: number | null
-          final_amount: number
           id?: string
+          items: Json
           order_number: string
-          product_id: string
-          product_image: string
-          product_name: string
           promo_code?: string | null
-          quantity?: number
           special_notes?: string | null
           status?: string
           subtotal: number
-          unit_price: number
+          total_amount: number
           updated_at?: string
         }
         Update: {
@@ -64,19 +56,48 @@ export type Database = {
           delivery_address?: string
           discount_amount?: number | null
           discount_percentage?: number | null
-          final_amount?: number
           id?: string
+          items?: Json
           order_number?: string
-          product_id?: string
-          product_image?: string
-          product_name?: string
           promo_code?: string | null
-          quantity?: number
           special_notes?: string | null
           status?: string
           subtotal?: number
-          unit_price?: number
+          total_amount?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          created_at: string | null
+          description: string
+          id: string
+          image_url: string | null
+          name: string
+          price: number
+          target_audience: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          id: string
+          image_url?: string | null
+          name: string
+          price: number
+          target_audience?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number
+          target_audience?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -92,8 +113,8 @@ export type Database = {
       validate_promo_code: {
         Args: { code: string }
         Returns: {
-          is_valid: boolean
           discount_percent: number
+          is_valid: boolean
         }[]
       }
     }
