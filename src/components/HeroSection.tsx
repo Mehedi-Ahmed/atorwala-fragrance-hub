@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import heroBackground from "@/assets/hero-background.jpg";
 
@@ -24,8 +23,7 @@ const HeroSection = () => {
           <img 
             src="/lovable-uploads/026a6b78-c65c-4a51-b329-2db8263e4aef.png" 
             alt="Atorwala Logo" 
-            className="mx-auto h-32 md:h-40 w-auto object-contain"
-            height="150vh"
+            className="mx-auto h-48 sm:h-56 md:h-64 lg:h-72 xl:h-80 w-auto object-contain"
           />
         </div>
         
