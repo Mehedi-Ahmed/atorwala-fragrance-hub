@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -302,11 +301,11 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
               />
             </div>
 
-            <div className="bg-luxury-cream/50 p-6 rounded-lg border border-luxury-gold/20">
+            <div className="bg-luxury-navy/5 p-6 rounded-lg border border-luxury-navy/20">
               <h4 className="font-bold text-luxury-navy mb-4 text-lg">Order Summary</h4>
               <div className="space-y-3 max-h-48 overflow-y-auto">
                 {items.map((item) => (
-                  <div key={item.id} className="flex justify-between items-center py-2 border-b border-luxury-gold/10">
+                  <div key={item.id} className="flex justify-between items-center py-2 border-b border-luxury-navy/10">
                     <div>
                       <span className="font-semibold text-luxury-navy">{item.name}</span>
                       <span className="text-sm text-luxury-navy/70 ml-2">x{item.quantity}</span>
@@ -315,7 +314,7 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
                   </div>
                 ))}
               </div>
-              <hr className="border-luxury-gold/30 my-4" />
+              <hr className="border-luxury-navy/30 my-4" />
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-luxury-navy">Subtotal:</span>
@@ -329,11 +328,11 @@ const OrderForm = ({ isOpen, onClose }: OrderFormProps) => {
                 )}
                 <div className="flex justify-between items-center text-lg">
                   <span className="font-bold text-luxury-navy">Total Amount:</span>
-                  <span className="font-bold text-luxury-gold">৳{finalPrice.toFixed(2)}</span>
+                  <span className="font-bold text-luxury-navy text-xl">৳{finalPrice.toFixed(2)}</span>
                 </div>
               </div>
               <div className="text-center pt-2">
-                <span className="text-sm font-semibold text-luxury-gold bg-luxury-gold/10 px-3 py-1 rounded-full">
+                <span className="text-sm font-semibold text-luxury-navy bg-luxury-navy/10 px-3 py-1 rounded-full">
                   Cash on Delivery (COD)
                 </span>
               </div>
