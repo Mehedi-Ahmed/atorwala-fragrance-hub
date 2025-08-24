@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import ProductCard from "./ProductCard";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,11 +18,11 @@ const ProductsSection = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Image mapping for the products
+  // Image mapping for the products based on their names
   const imageMap: { [key: string]: string } = {
-    'mystic-blossom': ehsasImage,
-    'sapphire-sand': royalMintImage,
-    'raw-pulse': diorSauvageImage,
+    'mystic-blossom': ehsasImage, // Ehsas Al Arabia matches feminine Mystic Blossom
+    'sapphire-sand': royalMintImage, // Royal Mint matches masculine Sapphire Sand
+    'raw-pulse': diorSauvageImage, // Dior Sauvage matches masculine Raw Pulse
   };
 
   useEffect(() => {
