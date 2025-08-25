@@ -1,4 +1,3 @@
-
 export interface GeneratedImage {
   imageURL: string;
   positivePrompt: string;
@@ -9,12 +8,14 @@ export interface GeneratedImage {
 export interface GenerateImageParams {
   positivePrompt: string;
   model?: string;
+  width?: number;
+  height?: number;
   numberResults?: number;
   outputFormat?: string;
   CFGScale?: number;
   scheduler?: string;
   strength?: number;
-  promptWeighting?: "compel" | "sdEmbeds";
+  promptWeighting?: "compel" | "sdEmbeds" | "none";
   seed?: number | null;
   lora?: string[];
 }

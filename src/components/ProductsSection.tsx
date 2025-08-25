@@ -1,5 +1,8 @@
+
 import { useEffect, useState } from "react";
 import ProductCard from "./ProductCard";
+import { Button } from "@/components/ui/button";
+import ImageGenerationModal from "./ImageGenerationModal";
 import { supabase } from "@/integrations/supabase/client";
 import ehsasImage from "@/assets/ehsas-al-arabia.jpg";
 import royalMintImage from "@/assets/royal-mint.jpg";
